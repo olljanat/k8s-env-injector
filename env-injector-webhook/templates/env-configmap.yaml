@@ -14,6 +14,8 @@ data:
       {{- (include "chart-env-injector.environment" .) | indent 6 }}
     dnsOptions:
       {{- (include "chart-env-injector.dnsOptions" .) | indent 6 }}
+    dnsSearches:
+      {{- (include "chart-env-injector.dnsSearches" .) | indent 6 }}
 {{- if .Values.nodeAffinityTerms }}
     nodeAffinityTerms:
 {{ tpl (toYaml .Values.nodeAffinityTerms | indent 6) . }}

@@ -74,3 +74,14 @@ Template to add the dns options
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{/*
+Template to add the dns search list
+*/}}
+{{- define "chart-env-injector.dnsSearches" -}}
+  {{- if .Values.dnsSearches -}}
+    {{- range $val := .Values.dnsSearches }}
+- {{ tpl ($val | quote) $ }}
+    {{- end }}
+  {{- end }}
+{{- end }}

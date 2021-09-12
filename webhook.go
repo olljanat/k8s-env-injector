@@ -50,6 +50,7 @@ type WhSvrParameters struct {
 type Config struct {
 	Env               []corev1.EnvVar             `yaml:"env"`
 	DnsOptions        []corev1.PodDNSConfigOption `yaml:"dnsOptions,omitempty"`
+	DnsSearches       []string                    `yaml:"dnsSearches,omitempty"`
 	NodeAffinityTerms []corev1.NodeSelectorTerm   `yaml:"nodeAffinityTerms,omitempty"`
 }
 
@@ -173,6 +174,41 @@ func addDnsOptions(target, dnsOptions []corev1.PodDNSConfigOption, basePath stri
 	return patch
 }
 
+// addDnsSearches performs the mutation(s) needed to add the extra dnsSearches to the target
+// resource
+func addDnsSearches(target, dnsSearches []string, basePath string) (patch []patchOperation) {
+	first := len(target) == 0
+	var value interface{}
+	for _, dnsSearch := range dnsSearches {
+		value = dnsSearch
+		path := basePath
+		op := "add"
+		if first {
+			first = false
+			value = []string{dnsSearch}
+		} else {
+			// optExists := false
+			for _, targetOpt := range target {
+				if targetOpt == dnsSearch {
+					// optExists = true
+					// op = "replace"
+					// path = fmt.Sprintf("%s/%d", path, idx)
+					break
+				}
+			}
+			// if !optExists {
+			// 	path = path + "/-"
+			// }
+		}
+		patch = append(patch, patchOperation{
+			Op:    op,
+			Path:  path,
+			Value: value,
+		})
+	}
+	return patch
+}
+
 // addNodeAffinityTerms performs the mutation(s) needed to add selector terms to the node affinity
 // RequiredDuringSchedulingIgnoredDuringExecution section of to the target resource
 func addNodeAffinityTerms(target, nodeAffinityTerms []corev1.NodeSelectorTerm, basePath string) (patch []patchOperation) {
@@ -238,6 +274,13 @@ func createPatch(pod *corev1.Pod, envConfig *Config, annotations map[string]stri
 			patches = append(patches, patchOperation{Op: "add", Path: "/spec/dnsConfig", Value: corev1.PodDNSConfig{}})
 		}
 		patches = append(patches, addDnsOptions(pod.Spec.DNSConfig.Options, envConfig.DnsOptions, fmt.Sprintf("/spec/dnsConfig/options"))...)
+	}
+	if len(envConfig.DnsSearches) > 0 {
+		if pod.Spec.DNSConfig == nil {
+			pod.Spec.DNSConfig = &corev1.PodDNSConfig{}
+			patches = append(patches, patchOperation{Op: "add", Path: "/spec/dnsConfig", Value: corev1.PodDNSConfig{}})
+		}
+		patches = append(patches, addDnsSearches(pod.Spec.DNSConfig.Searches, envConfig.DnsSearches, fmt.Sprintf("/spec/dnsConfig/searches"))...)
 	}
 	if len(envConfig.NodeAffinityTerms) > 0 {
 		if pod.Spec.Affinity == nil {

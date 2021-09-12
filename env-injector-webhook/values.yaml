@@ -6,6 +6,10 @@ dnsOptions:
   ndots: 3
 #  single-request-reopen:
 #  use-vc:
+# dnsSearches:
+#  - dev.local
+#  - dev.svc.cluster.local
+#  - cluster.local
 nodeAffinityTerms: {}
 #  - matchExpressions:
 #      - key: agentpool

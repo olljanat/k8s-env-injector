@@ -8,6 +8,10 @@ dnsOptions:
     value: 3
   - name: single-request-reopen
   - name: use-vc
+dnsSearches:
+  - dev.local
+  - dev.svc.cluster.local
+  - cluster.local
 nodeAffinityTerms:
   - matchExpressions:
       - key: agentpool
